@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  /* PLUGleads Industrial Branding */
+  --color-brand-orange: #f97316;
+  --color-brand-zinc: #09090b;
+  --color-brand-border: #27272a;
+}
+
+:root {
+  background-color: #09090b; /* Zinc-950 */
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #09090b;
+}
+
+/* Custom UI Utility from your previous code */
+.glass-panel {
+  background: rgba(42, 49, 66, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
+}
