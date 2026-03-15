@@ -7,13 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "autopush:start": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-auto-push.ps1 -Branch main -IntervalSec 8",
+    "autopush:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/stop-auto-push.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@tailwindcss/vite": "^4.2.1",
     "axios": "^1.13.6",
+    "framer-motion": "^12.36.0",
+    "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
     "papaparse": "^5.5.3",
     "react": "^18.2.0",

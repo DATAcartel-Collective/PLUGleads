@@ -1,53 +1,142 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { isSupabaseBrowserKeyValid, supabase } from './supabaseClient';
 
-const Login = () => {
-  const [phone, setPhone] = useState('');
-  const navigate = useNavigate();
+const Login = ({ onAuthenticated, onPreview, onBack }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState('CLIENT');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // TODO: Add real Firebase phone authentication here
-    console.log("Simulating login with:", phone);
-    navigate('/dashboard');
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
+
+      const appRole = data.user?.app_metadata?.app_role || 'CLIENT';
+      if (mode === 'ADMIN' && appRole !== 'DATACARTEL_ADMIN') {
+        await supabase.auth.signOut();
+        throw new Error('This account is not provisioned as a DATAcartel admin.');
+      }
+      if (mode === 'CLIENT' && appRole === 'DATACARTEL_ADMIN') {
+        throw new Error('Use Admin mode for this account.');
+      }
+
+      onAuthenticated();
+    } catch (signInFailure) {
+      setError(signInFailure.message || 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-md p-8 rounded-2xl shadow-2xl relative overflow-hidden">
-        {/* Decorative Glow */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tighter text-white">PLUG<span className="text-blue-500">leads</span></h1>
-          <p className="text-xs text-gray-400 mt-1 tracking-widest uppercase">DATAcartel Collective</p>
-        </div>
-
-        {/* STEP 1: Phone Input */}
-        <div id="step-phone">
-          <label className="block text-sm font-medium text-gray-400 mb-2">Mobile Number</label>
-          <div className="relative">
-            <input 
-              type="tel" 
-              id="phone-input" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 555 123 4567" 
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder-slate-600" 
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Standard message and data rates may apply.</p>
-          
-          <button 
-            id="send-code-btn" 
-            onClick={handleLogin}
-            className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-95"
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_20%_10%,#2a1554_0%,#140f2b_45%,#05030d_100%)] px-4">
+      <form
+        onSubmit={handleSignIn}
+        className="w-full max-w-md rounded-2xl border border-violet-200/20 bg-white/10 p-8 shadow-2xl backdrop-blur-xl"
+      >
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="mb-5 inline-flex items-center gap-2 rounded-lg border border-violet-200/30 bg-white/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-violet-100 transition hover:border-violet-200/60"
           >
-              Send Verification Code
+            <ArrowLeft size={14} /> Back
+          </button>
+        ) : null}
+        <p className="text-xs font-bold uppercase tracking-widest text-violet-200">Secure Access</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-white">PLUGleads Contractor Portal</h1>
+        <p className="mt-2 text-xs text-slate-200/80">
+          Sign in with your Supabase Auth email/password for the live workspace.
+        </p>
+
+        {onPreview ? (
+          <button
+            type="button"
+            onClick={onPreview}
+            className="mt-4 w-full rounded-xl border border-violet-200/30 bg-violet-200/20 px-4 py-3 text-xs font-black uppercase tracking-wider text-violet-100 transition hover:bg-violet-200/30"
+          >
+            Open Read-Only Demo (No Login)
+          </button>
+        ) : null}
+
+        {!isSupabaseBrowserKeyValid ? (
+          <p className="mt-3 rounded-lg border border-amber-400/40 bg-amber-300/10 px-3 py-2 text-xs font-semibold text-amber-200">
+            Live sign-in is disabled because no public Supabase key is configured. Set
+            {' '}
+            <code>VITE_SUPABASE_ANON_KEY</code>
+            {' '}
+            and refresh.
+          </p>
+        ) : null}
+
+        <div className="mt-6 grid grid-cols-2 gap-2 rounded-xl border border-violet-200/20 bg-slate-950/50 p-1">
+          <button
+            type="button"
+            onClick={() => setMode('CLIENT')}
+            className={`rounded-lg px-3 py-2 text-xs font-black tracking-wide transition ${mode === 'CLIENT' ? 'bg-violet-300 text-slate-900' : 'text-slate-300'
+            }`}
+          >
+            Contractor
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('ADMIN')}
+            className={`rounded-lg px-3 py-2 text-xs font-black tracking-wide transition ${mode === 'ADMIN' ? 'bg-violet-300 text-slate-900' : 'text-slate-300'
+            }`}
+          >
+            DATAcartel
           </button>
         </div>
-      </div>
+
+        <label htmlFor="email" className="mt-5 block text-xs font-bold uppercase tracking-widest text-slate-300">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mt-2 w-full rounded-lg border border-violet-200/20 bg-slate-950/60 px-3 py-3 text-white outline-none ring-violet-300/50 focus:ring-2"
+          required
+        />
+
+        <label htmlFor="password" className="mt-4 block text-xs font-bold uppercase tracking-widest text-slate-300">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mt-2 w-full rounded-lg border border-violet-200/20 bg-slate-950/60 px-3 py-3 text-white outline-none ring-violet-300/50 focus:ring-2"
+          required
+        />
+
+        {error ? <p className="mt-4 text-sm font-semibold text-red-500">{error}</p> : null}
+
+        <button
+          type="submit"
+          disabled={loading || !isSupabaseBrowserKeyValid}
+          className="mt-6 w-full rounded-xl bg-violet-300 px-4 py-3 text-sm font-black uppercase tracking-wider text-slate-900 transition hover:bg-violet-200 disabled:opacity-60"
+        >
+          {loading ? 'Signing In...' : `Sign In ${mode === 'ADMIN' ? 'Admin' : 'Contractor'}`}
+        </button>
+
+      </form>
     </div>
   );
 };
 
 export default Login;
+
