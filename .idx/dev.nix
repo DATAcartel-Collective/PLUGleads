@@ -11,6 +11,8 @@
   env = {
   VITE_SUPABASE_URL = "https://ylmsomkljcqcjpztslug.supabase.co";
   VITE_SUPABASE_ANON_KEY = "sb_publishable_cUd8snCxGcpaws7pRWgU2Q_VpaQb-jV";
+
+  
 };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
